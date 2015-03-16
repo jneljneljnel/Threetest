@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Getting Started with Three.js</title>    
+    <script src="js/three.min.js"></script>
+    <link href="http://jeremynelson.altervista.org/bootstrap.min.css" rel="stylesheet">
+    <link href="http://jeremynelson.altervista.org/custom.css" rel="stylesheet">
+     <script src="js/three.min.js"></script>
+    <script src="js/OrbitControls.js"></script>
+    <script src="js/ColladaLoader.js"></script>
+
+
+  <body>
+    <div>
+    <img src="http://jeremynelson.altervista.org/stripes7.png" id="fsbg">
+    </div>
+    <div class="nav nav-tabs">
+      <div class="container">
+        <ul class="pull-left">
+    
+          <li><a href="http://jeremynelson.altervista.org/3-D.html">3-D </a></li>
+          
+          <li><a href="http://jeremynelson.altervista.org/Design.html">Design</a></li>
+          <li><a href="http://jeremynelson.altervista.org/photo.html">Photo</a></li>
+          <li><a href="http://jeremynelson.altervista.org/DIY.html">DIY</a></li>
+        </ul>
+        <ul class="pull-right">
+          <li><a href="http://jeremynelson.altervista.org/BIO.html">BIO</a></li>
+          <li><a href="http://jeremynelson.altervista.org/index.html">HOME</a></li>
+          
+        
+        </ul>
+      </div>
+    </div>
+    <script type="x-shader/x-vertex" id="vertexShader">
+ 
+      varying vec3 vWorldPosition;
+ 
+      void main() {
+ 
+        vec4 worldPosition = modelMatrix * vec4( position, 1.0 );
+        vWorldPosition = worldPosition.xyz;
+ 
+        gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+ 
+      }
+ 
+    </script>
+ 
+    <script type="x-shader/x-fragment" id="fragmentShader">
+ 
+      uniform vec3 topColor;
+      uniform vec3 bottomColor;
+      uniform float offset;
+      uniform float exponent;
+ 
+      varying vec3 vWorldPosition;
+ 
+      void main() {
+ 
+        float h = normalize( vWorldPosition + offset ).y;
+        gl_FragColor = vec4( mix( bottomColor, topColor, max( pow( h, exponent ), 0.0 ) ), 1.0 );
+ 
+      }
+ 
+    </script>
+    <script>
+
+    window.onload = function() {
+
+        var renderer = new THREE.WebGLRenderer();
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        document.body.appendChild( renderer.domElement );
+
+        var scene = new THREE.Scene();
+
+        var camera = new THREE.PerspectiveCamera(
+            35,             // Field of view
+            800 / 600,      // Aspect ratio
+            0.3,            // Near plane
+            10000           // Far plane
+        );
+        camera.position.set( -15, 3, 10 );
+        camera.lookAt( scene.position );
+
+
+
+        window.addEventListener('resize', function() {
+        var WIDTH = window.innerWidth,
+            HEIGHT = window.innerHeight;
+        renderer.setSize(WIDTH, HEIGHT);
+        camera.aspect = WIDTH / HEIGHT;
+        camera.updateProjectionMatrix();
+      });
+
+        var vertexShader = document.getElementById( 'vertexShader' ).textContent;
+        var fragmentShader = document.getElementById( 'fragmentShader' ).textContent;
+        var uniforms = {
+          topColor:    { type: "c", value: new THREE.Color(0x262626) },
+          bottomColor: { type: "c", value: new THREE.Color( 0xFCFCFC) },
+          offset:    { type: "f", value: 1000 },
+          exponent:  { type: "f", value: 0.1 }
+        }
+      
+ 
+        
+ 
+        var skyGeo = new THREE.SphereGeometry( 2000, 32, 15 );
+        var skyMat = new THREE.ShaderMaterial( { vertexShader: vertexShader, fragmentShader: fragmentShader, uniforms: uniforms, side: THREE.BackSide } );
+ 
+        var sky = new THREE.Mesh( skyGeo, skyMat );
+        scene.add( sky );
+
+
+
+        var geometry = new THREE.CubeGeometry( 2.5, 2.5, 2.5 );
+        var material = new THREE.MeshLambertMaterial( { color: 0xFF0000 } );
+        var mesh = new THREE.Mesh( geometry, material );
+        scene.add( mesh )
+
+        
+      var light = new THREE.PointLight(0x404040, 0.8);
+      light.position.set(-100,200,100);
+      scene.add(light);
+ 
+var sphereSize = 1; 
+var pointLightHelper = new THREE.PointLightHelper( light, sphereSize ); 
+scene.add( pointLightHelper );
+ 
+ 
+      var light2 = new THREE.PointLight(0xd7f0ff, 0.2);
+      light2.position.set(200,200,100);
+      scene.add(light2);
+ 
+var sphereSize = 1; 
+var pointLightHelper2 = new THREE.PointLightHelper( light2, sphereSize ); 
+scene.add( pointLightHelper2 );
+ 
+ 
+var light3 = new THREE.PointLight(0xFFFFFF, 0.5);
+      light3.position.set(150,200,-100);
+      scene.add(light3);
+ 
+var sphereSize = 1; 
+var pointLightHelper3 = new THREE.PointLightHelper( light3, sphereSize ); 
+scene.add( pointLightHelper3 );
+
+var light4 = new THREE.PointLight( 0x404040 ,1 );
+scene.add (light4 );
+
+        var loader = new THREE.ColladaLoader();
+ 
+ 
+  loader.options.convertUpAxis = true;
+ 
+ 
+  loader.load( 'models/lamp.dae', function ( collada ) {
+ 
+   
+    var dae = collada.scene;
+  
+ 
+    var skin = collada.skins[ 0 ];
+ 
+  
+dae.position.set(0,0,0);//x,z,y- if you think in blender dimensions ;)
+dae.scale.set(10.0,10.0,10.0);
+ 
+scene.add(dae);
+ 
+var raycaster = new THREE.Raycaster();
+var projector = new THREE.Projector();
+var directionVector = new THREE.Vector3();
+
+
+var clickInfo = {
+  x: 0,
+  y: 0,
+  userHasClicked: false
+};
+
+
+window.addEventListener('click', function (evt) {
+  // The user has clicked; let's note this event
+  // and the click's coordinates so that we can
+  // react to it in the render loop
+  clickInfo.userHasClicked = true;
+  clickInfo.x = evt.clientX;
+  clickInfo.y = evt.clientY;
+}, false);
+// The following will translate the mouse coordinates into a number
+// ranging from -1 to 1, where
+//      x == -1 && y == -1 means top-left, and
+//      x ==  1 && y ==  1 means bottom right
+var x = ( clickInfo.x / SCREEN_WIDTH ) * 2 - 1;
+var y = -( clickInfo.y / SCREEN_HEIGHT ) * 2 + 1;
+// Unproject the vector
+projector.unprojectVector(directionVector, camera);
+ 
+// Substract the vector representing the camera position
+directionVector.sub(camera.position);
+ 
+ // Normalize the vector, to avoid large numbers from the
+// projection and substraction
+directionVector.normalize();
+ 
+// Now our direction vector holds the right numbers!
+raycaster.set(camera.position, directionVector);
+ 
+ // Ask the raycaster for intersects with all objects in the scene:
+// (The second arguments means "recursive")
+var intersects = raycaster.intersectObjects(scene.children, true);
+ 
+if (intersects.length) {
+  // intersections are, by default, ordered by distance,
+  // so we only care for the first one. The intersection
+  // object holds the intersection point, the face that's
+  // been "hit" by the ray, and the object to which that
+  // face belongs. We only care for the object itself.
+  var target = intersects[0].object;
+  statsNode.innerHTML = 'Name: ' + target.name
+    + '<br>'
+    + 'ID: ' + target.id;
+}
+var axes = new THREE.AxisHelper(50);
+  axes.position = dae.position;
+  //scene.add(axes);
+  
+  var gridXZ = new THREE.GridHelper(100, 10);
+  gridXZ.setColors( new THREE.Color(0x8f8f8f), new THREE.Color(0x8f8f8f) );
+  gridXZ.position.set(0,0,0 );
+  //scene.add(gridXZ);
+  
+  
+      });
+ 
+            
+
+controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+var animate = function () {
+
+        requestAnimationFrame( animate );
+
+        mesh.rotation.x = Date.now() * 0.0005;
+        mesh.rotation.y = Date.now() * 0.001;
+
+
+
+        renderer.render( scene, camera );
+        controls.update();
+
+      }
+
+      
+      animate();
+;
+    };
+    </script>
+</head>
+<body></body>
+</html>
